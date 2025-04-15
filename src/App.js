@@ -212,7 +212,7 @@ function App() {
 
       {/* Bet Size Selector */}
       <div className="bet-selector">
-        <label htmlFor="bet-size">Bet Size:</label>
+        <label htmlFor="bet-size">Bet Size $:</label>
         <input
           type="number"
           id="bet-size"
