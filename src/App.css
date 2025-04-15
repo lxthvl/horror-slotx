@@ -1,0 +1,241 @@
+/* App.css */
+
+/* Base Styles */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #1a1a1a;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #2a2a2a;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+  color: #ff5555;
+  margin-bottom: 20px;
+  font-size: 2.5rem;
+  text-shadow: 0 0 10px rgba(255, 85, 85, 0.5);
+}
+
+/* Grid Layout */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px auto;
+  width: fit-content;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  background-color: #3a3a3a;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.cell.fs {
+  background-color: #4a6da7;
+  box-shadow: 0 0 15px rgba(74, 109, 167, 0.7);
+}
+
+.cell.shatter {
+  animation: shatter 1.5s ease-out;
+}
+
+@keyframes shatter {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Control Panel */
+.bet-selector,
+.auto-spin-selector,
+.speed-selector {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="number"],
+select {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  background-color: #3a3a3a;
+  color: white;
+  font-size: 1rem;
+}
+
+input[type="number"] {
+  width: 80px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #ff5555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  margin: 5px;
+}
+
+button:hover {
+  background-color: #ff3333;
+  transform: scale(1.05);
+}
+
+button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Game Info */
+.message {
+  font-size: 1.2rem;
+  margin: 15px 0;
+  min-height: 24px;
+  color: #ffcc00;
+}
+
+p {
+  margin: 8px 0;
+  font-size: 1.1rem;
+}
+
+/* Free Spins Features */
+.free-spin-summary {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 30px;
+  border-radius: 15px;
+  z-index: 100;
+  text-align: center;
+  color: white;
+  box-shadow: 0 0 30px gold;
+  border: 2px solid gold;
+  width: 80%;
+  max-width: 400px;
+}
+
+.free-spin-summary h2 {
+  color: gold;
+  margin-top: 0;
+}
+
+.free-spin-summary button {
+  background-color: gold;
+  color: #333;
+  font-weight: bold;
+  padding: 12px 25px;
+  margin-top: 20px;
+}
+
+.free-spin-summary button:hover {
+  background-color: #ffcc00;
+}
+
+.blurred {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.free-spin-counter {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 15px;
+  border-radius: 10px;
+  color: gold;
+  text-align: center;
+  border: 1px solid gold;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  z-index: 10;
+}
+
+.free-spin-counter h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+}
+
+.free-spin-counter p {
+  margin: 5px 0;
+  font-size: 1.1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .cell {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .free-spin-counter {
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cell {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .bet-selector,
+  .auto-spin-selector,
+  .speed-selector {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .free-spin-counter {
+    position: static;
+    margin: 15px auto;
+    width: fit-content;
+  }
+}
