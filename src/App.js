@@ -18,6 +18,15 @@ const paylines = [
   [0, 5, 10, 15, 20], [4, 9, 14, 19, 24], [2, 7, 12, 17, 22]
 ];
 
+// Upgrade mapping for the shattering mechanic
+const upgradeMapping = {
+  '🕯️': '👻',
+  '👻': '📖',
+  '📖': '🩸',
+  '🩸': '🧟',
+  '🧟': '💀',
+};
+
 const getWeightedRandomSymbol = () => {
   const entries = Object.entries(symbolData);
   const totalWeight = entries.reduce((sum, [_, data]) => sum + data.weight, 0);
@@ -60,25 +69,30 @@ const calculateLineWins = (flatGrid) => {
   return totalWin;
 };
 
+// New shattering (upgrade) mechanic that transforms 8 or more identical symbols
 const handleShatter = (grid) => {
+  // Build a count of each non-free-spin symbol in the grid.
   const flat = grid.flat();
-  const symbolIndexes = {};
+  const symbolCounts = {};
 
-  flat.forEach((symbol, index) => {
-    if (symbol === 'FS') return;
-    if (!symbolIndexes[symbol]) symbolIndexes[symbol] = [];
-    symbolIndexes[symbol].push(index);
-  });
-
-  Object.keys(symbolIndexes).forEach((symbol) => {
-    if (symbolIndexes[symbol].length >= 8) {
-      symbolIndexes[symbol].forEach(index => {
-        grid[Math.floor(index / 5)][index % 5] = '💀';
-      });
+  flat.forEach(symbol => {
+    if (symbol !== 'FS') {
+      symbolCounts[symbol] = (symbolCounts[symbol] || 0) + 1;
     }
   });
+
+  // For each symbol that occurs 8 or more times, upgrade every occurrence
+  Object.keys(symbolCounts).forEach(symbol => {
+    if (symbolCounts[symbol] >= 8 && upgradeMapping[symbol]) {
+      grid = grid.map(row => 
+        row.map(cell => (cell === symbol ? upgradeMapping[symbol] : cell))
+      );
+    }
+  });
+
   return grid;
 };
+
 
 function App() {
   const [grid, setGrid] = useState(generateGrid);
@@ -99,53 +113,76 @@ function App() {
 
   const handleSpin = () => {
     if (isFreeSpinMode) {
-      // Free spin mode: spins cost nothing but win should be added to balance
+      // Free spin logic: cost is zero, but wins add to balance
       const newGrid = generateGrid();
       const flat = newGrid.flat();
       const win = calculateLineWins(flat);
       const fsSymbolsThisSpin = flat.filter(symbol => symbol === 'FS').length;
 
-      // Update grid, free spin winnings, and add the win to the balance immediately
       setGrid(newGrid);
-      setFreeSpinWins(prev => prev + win);
-      setBalance(prev => prev + win);
+      // Use functional updates to avoid stale values
+      setBalance(prevBalance => prevBalance + win);
 
-      // Decrement free spins; retrigger free spins if sufficient FS symbols appear
-      let newFreeSpinsLeft = freeSpinsLeft - 1;
-      if (fsSymbolsThisSpin >= 3) {
-        newFreeSpinsLeft += 10;
-      }
-      setFreeSpinsLeft(newFreeSpinsLeft);
+      // Update free spin wins and immediately compute the new total,
+      // then update the message without relying on the stale freeSpinWins value.
+      setFreeSpinWins(prevWins => {
+        const newTotalWins = prevWins + win;
+        return newTotalWins;
+      });
 
-      if (newFreeSpinsLeft > 0) {
-        setMessage(`${newFreeSpinsLeft} Free Spins remaining - Win: ${win.toFixed(2)}`);
-      } else {
-        setMessage(`Free Spins over! Total free spin winnings: ${(freeSpinWins + win).toFixed(2)}`);
-        setIsFreeSpinMode(false);
-      }
+      // Use functional update for free spins left as well
+      setFreeSpinsLeft(prevSpins => {
+        let newFreeSpinsLeft = prevSpins - 1;
+        if (fsSymbolsThisSpin >= 3) {
+          newFreeSpinsLeft += 10;
+        }
+        // Now update the message using newFreeSpinsLeft
+        if (newFreeSpinsLeft > 0) {
+          setMessage(`${newFreeSpinsLeft} Free Spins remaining - Win: ${win.toFixed(2)}`);
+        } else {
+          // Instead of reading freeSpinWins from state, capture its computed value via a callback:
+          setFreeSpinWins(prevWins => {
+            const newTotalWins = prevWins; // newTotalWins already stored here
+            setMessage(`Free Spins over! Total free spin winnings: ${newTotalWins.toFixed(2)}`);
+            setIsFreeSpinMode(false);
+            return newTotalWins;
+          });
+        }
+        return newFreeSpinsLeft;
+      });
     } else {
-      // Base game spin logic
+      // Regular game logic
       const newGrid = generateGrid();
       const flat = newGrid.flat();
       const fsSymbolCount = flat.filter(s => s === 'FS').length;
       const win = calculateLineWins(flat);
-      
+
       setGrid(newGrid);
       setFsCount(fsSymbolCount);
 
-      if (flat.filter(s => s === '💀').length >= 8) {
-        setIsShattering(true);
-        const shatteredGrid = handleShatter(newGrid);
-        setGrid(shatteredGrid);
+      // Check for shattering upgrade: count non-FS symbols
+      const nonFSSymbols = flat.filter(s => s !== 'FS');
+      if (nonFSSymbols.length > 0) {
+        const counts = nonFSSymbols.reduce((acc, sym) => {
+          acc[sym] = (acc[sym] || 0) + 1;
+          return acc;
+        }, {});
+        const shouldShatter = Object.values(counts).some(count => count >= 8);
+        if (shouldShatter) {
+          setIsShattering(true);
+          const upgradedGrid = handleShatter(newGrid);
+          setGrid(upgradedGrid);
+        }
       }
 
       const bet = betSize || 1;
       const validWin = win || 0;
+
       setTotalBet(prev => prev + bet);
       setTotalWin(prev => prev + validWin);
       setBalance(prev => prev - bet + validWin);
 
-      // Trigger free spin mode if base game spin meets the FS threshold (3 or more FS symbols)
+      // Trigger free spins if base spin meets the threshold
       if (fsSymbolCount >= 3) {
         setIsFreeSpinMode(true);
         setFreeSpinsLeft(10);
@@ -252,7 +289,6 @@ function App() {
         </select>
       </div>
       
-      {/* Grid Display */}
       <div className="grid">
         {grid.map((row, rowIndex) => (
           <div key={rowIndex} className="row">
